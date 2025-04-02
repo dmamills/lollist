@@ -58,6 +58,8 @@ const getListWithFullUserInfo = async () => {
   ));
 };
 
+const userExists = withClient(async (client, name) => client.exists(`${USER_KEY}${name}`))
+
 module.exports = {
   createConnection,
   getList,
@@ -67,4 +69,5 @@ module.exports = {
   addToListWithUserNames,
   getUserByName,
   getListWithFullUserInfo,
+  userExists
 }

@@ -1,28 +1,41 @@
-const validateName = (req, res, next) => {
+const { userExists } = require('./listService');
+const { sendError } = require('./utils');
+const isValidGitHubLink = (url) => /^https?:\/\/(www\.)?github\.com\/[\w-]+(\/[\w-]+)?(\/.*)?$/.test(url);
+const areAllGitHubLinks = (arr) => arr.every(isValidGitHubLink);
+
+const validateNameInRequest = (req, res, next) => {
   if(!req.body?.name) {
-    res.status(400).json({ error: 'missing name' });
+    sendError(400, 'missing name');
     return;
   }
   next();
 }
 
-const isValidGitHubLink = (url) => /^https?:\/\/(www\.)?github\.com\/[\w-]+(\/[\w-]+)?(\/.*)?$/.test(url);
-const areAllGitHubLinks = (arr) => arr.every(isValidGitHubLink);
+const validateNameUnique = async (req, res, next) => {
+  const usernameExists = await userExists(req.body.name);
+
+  if(usernameExists) {
+    sendError(400, 'name already in list', res);
+    return;
+  }
+
+  next();
+}
 
 const validateLinks = (req, res, next) => {
   const links = req.body?.links
   if(!links) {
-    res.status(400).json({ error: 'missing links' });
+    sendError(400, 'missing links', res);
     return;
   }
 
   if(!Array.isArray(links)) {
-    res.status(400).json({error: 'links must be array of strings'})
+    sendError(400, 'links must be an array of strings', res);
     return;
   }
 
   if(!areAllGitHubLinks(links)) {
-    res.status(400).json({ error: `Found invalid link to github in: ${links.join(',')}`})
+    sendError(400, `Found invalid link to github in: ${links.join(',')}`, res);
     return;
   }
 
@@ -31,5 +44,6 @@ const validateLinks = (req, res, next) => {
 
 module.exports = {
   validateLinks,
-  validateName
+  validateNameInRequest,
+  validateNameUnique
 };

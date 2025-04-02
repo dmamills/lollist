@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { getList, addToList, removeFromList, assignNextUser, addToListWithUserNames, getUserByName, getListWithFullUserInfo } = require('./listService');
-const { validateLinks, validateName } = require('./validation');
+const { validateLinks, validateNameInRequest, validateNameUnique } = require('./validation');
 const Publisher = require('./publisher');
 const SlackPublisher = require('./publishers/slack-publisher');
 
@@ -13,7 +13,7 @@ router.get('/', async (req, res) => {
   res.json({ list });
 });
 
-router.post('/register', validateName, async (req, res) => {
+router.post('/register', validateNameInRequest, validateNameUnique, async (req, res) => {
   const addedName = req.body.name;
 
   if(req.body.githubName || req.body.slackName) {
@@ -36,7 +36,7 @@ router.post('/register', validateName, async (req, res) => {
   res.json({ list, addedName });
 });
 
-router.post('remove', validateName, async (req, res) => {
+router.post('/remove', validateNameInRequest, async (req, res) => {
   const removedName = req.body.name;
   await removeFromList(removedName);
   const list = await getList();
@@ -49,7 +49,7 @@ router.post('remove', validateName, async (req, res) => {
   return res.status(200).json({ removedName, list });
 });
 
-router.post('assign', validateLinks, async (req,res) => {
+router.post('/assign', validateLinks, async (req,res) => {
   const assignedUser = await assignNextUser();
   const links = req.body?.links;
   const currentList = await getList();
