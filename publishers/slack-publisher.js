@@ -47,5 +47,6 @@ class SlackPublisher {
     }).then((response) => response.status);
   }
 }
+//DRAMATIC CHANGE!
 
 module.exports = SlackPublisher;
