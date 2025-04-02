@@ -17,7 +17,14 @@ but the api exists simply to do a few things:
 All POST requests all require `Content-Type: application/json` 
 
 - `GET /` returns the current list
-- `POST /register` accepts a name and adds it to the end of the list, will throw 400 if name not provided
+- `POST /register`
+  - ```
+  {
+    name: "username",
+    slackName: "username to be @'d at",
+    githubName: "username to be assigned to MRs with"
+  }
+  ```
 - `POST /remove` accepts a name and removes it entirely from the list, will throw 400 if name not provided
 - `POST /assign` requires an array of URLS as a `link` property, returns the name of the person assigned to the MRs provided. It's up to the webhook implementation to inform them.
 
