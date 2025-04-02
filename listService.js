@@ -1,5 +1,6 @@
 const { createClient } = require('redis');
 const LIST_KEY = process.env['LIST_KEY'] || 'LIST_KEY';
+const USER_KEY = 'USER_';
 
 const createConnection = async () => {
   const client = await createClient()
@@ -21,15 +22,21 @@ const withClient = (fn) => async (...args) => {
 }
 
 const addToList = withClient(async (client, name) => client.lPush(LIST_KEY, name));
-const removeFromList = withClient(async (client, name) => client.lRem(LIST_KEY, 0, name));
 const assignNextUser = withClient(async (client) => client.rPopLPush(LIST_KEY, LIST_KEY));
 const getList = withClient((client) => client.lRange(LIST_KEY, 0, -1))
+
+const removeFromList = withClient(async (client, name) => {
+  await client.lRem(LIST_KEY, 0, name)
+  return client.del(`${USER_KEY}${name}`);
+});
+
 const addToListWithUserNames = withClient(async (client, names) => {
   await addToList(names.name);
-  return client.set(`USER_${names.name}`, JSON.stringify(names));
+  return client.set(`${USER_KEY}${names.name}`, JSON.stringify(names));
 });
+
 const getUserByName = withClient(async (client, name) => {
-  const value = await client.get(`USER_${name}`)
+  const value = await client.get(`${USER_KEY}${name}`)
   if(value) {
     try {
     return JSON.parse(value);
@@ -38,7 +45,18 @@ const getUserByName = withClient(async (client, name) => {
     }
   }
   return {};
-})
+});
+
+const getListWithFullUserInfo = async () => {
+  const users = await getList();
+  const userPromises = users.map(u => getUserByName(u));
+  return Promise.all(userPromises).then((values) => 
+    values.map((user, index) => ({
+        ...user,
+        name: users[index],
+    })
+  ));
+};
 
 module.exports = {
   createConnection,
@@ -48,4 +66,5 @@ module.exports = {
   assignNextUser,
   addToListWithUserNames,
   getUserByName,
+  getListWithFullUserInfo,
 }

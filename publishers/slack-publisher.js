@@ -20,6 +20,8 @@ const currentListToBlock = (currentList) => {
 
 const banner = () => {
   return [{
+    type: 'divider'
+  }, {
     type: 'section',
     text: {
       type: 'mrkdwn',
@@ -64,7 +66,7 @@ class SlackPublisher {
           "type": "section",
           "text": {
             "type": "mrkdwn",
-            "text": `*${userName}* you're up!`
+            "text": `<${userName}> you're up!`
           }
         },
         {
